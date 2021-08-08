@@ -6,8 +6,7 @@ use App\Models\FundApplication;
 use App\Models\User;
 use App\Shared\Cast\MoneyFactory;
 use Illuminate\Http\Request;
-use Money\Currency;
-use Money\Money;
+use DateTime;
 use Ramsey\Uuid\Uuid;
 
 class FundApplicationController extends Controller
@@ -41,20 +40,18 @@ class FundApplicationController extends Controller
     public function store(Request $request)
     {
         $fundapp = new FundApplication([
-            'id'                => Uuid::uuid4(),
-            'application_date'  => $request->application_date,
-            'no_fund'           => $request->no_fund,
-            'about'             => $request->about,
-            'item_description'  => $request->item_description,
-            'quantity'          => $request->quantity,
-            'status'            => $request->status
+            'id'                    => Uuid::uuid4(),
+            'application_number'    => $request->application_number,
+            'about'                 => $request->about,
+            'item_description'      => $request->item_description,
+            'quantity'              => $request->quantity,
+            'status'                => $request->status
 
         ]);
 
-        $fundapp->total = MoneyFactory::create($request->unit_price * $request->quantity, $request->currency);
-        $fundapp->unitPrice = MoneyFactory::create($request->unit_price, $request->currency);
-       // $fundapp->unitPrice = new Money($request->unit_price, new Currency($request->currency));
-        //$fundapp->total = new Money($request->unit_price * $request->quantity, new Currency($request->currency));
+        $fundapp->application_date  = date_format(new DateTime($request->application_date), 'D-m-y');
+        $fundapp->unitPrice         = MoneyFactory::create($request->unit_price);
+        $fundapp->total             = MoneyFactory::create($request->unit_price * $request->quantity);
 
         $user = User::findOrFail($request->user_id);
         $fundapp->user()->associate($user);
@@ -98,14 +95,14 @@ class FundApplicationController extends Controller
     {
         $fundapp = FundApplication::findOrFail($id);
 
-        $fundapp->application_date = $request->application_date;
-        $fundapp->no_fund = $request->no_fund;
-        $fundapp->about = $request->about;
-        $fundapp->item_description = $request->item_description;
-        $fundapp->unit_price = $request->unit_price;
-        $fundapp->quantity = $request->quantity;
-        $fundapp->total = $request->total;
-        $fundapp->status = $request->status;
+        $fundapp->application_date  = $request->application_date;
+        $fundapp->no_fund           = $request->no_fund;
+        $fundapp->about             = $request->about;
+        $fundapp->item_description  = $request->item_description;
+        $fundapp->unit_price        = $request->unit_price;
+        $fundapp->quantity          = $request->quantity;
+        $fundapp->total             = $request->total;
+        $fundapp->status            = $request->status;
 
         $user = User::findOrFail($request->user_id);
         $fundapp->user()->associate($user);
