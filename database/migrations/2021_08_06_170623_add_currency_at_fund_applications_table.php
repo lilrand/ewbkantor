@@ -15,8 +15,11 @@ class AddCurrencyAtFundApplicationsTable extends Migration
     {
         Schema::table('fund_applications', function (Blueprint $table) {
 
+            $table->renameColumn('unit_price', 'unit_price_amount');
+            $table->renameColumn('total', 'total_amount');
             $table->string('unit_price_currency', 3);
             $table->string('total_currency', 3);
+
         });
     }
 

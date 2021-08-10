@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;
+use UserStatus;
 
 class UserController extends Controller
 {
@@ -133,5 +134,24 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $user->delete();
+    }
+
+    public function active($id)
+    {
+        $user = User::findOrFail($id);
+        $user->status = UserStatus::ACTIVE;
+
+        $user->save();
+        return $user;
+    }
+
+    public function inactive($id)
+    {
+
+        $user = User::findOrFail($id);
+        $user->status = UserStatus::INACTIVE;
+
+        $user->save();
+        return $user;
     }
 }

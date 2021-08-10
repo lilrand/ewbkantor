@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Shared\Cast\MoneyFactory;
 use Illuminate\Http\Request;
 use DateTime;
+use FundApplicationStatus;
 use Ramsey\Uuid\Uuid;
 
 class FundApplicationController extends Controller
@@ -45,16 +46,17 @@ class FundApplicationController extends Controller
             'about'                 => $request->about,
             'item_description'      => $request->item_description,
             'quantity'              => $request->quantity,
-            'status'                => $request->status
-
         ]);
 
-        $fundapp->application_date  = date_format(new DateTime($request->application_date), 'D-m-y');
-        $fundapp->unitPrice         = MoneyFactory::create($request->unit_price);
-        $fundapp->total             = MoneyFactory::create($request->unit_price * $request->quantity);
+        $fundapp->application_date  = date_format(new DateTime($request->application_date), 'Y-m-d');
+        $fundapp->unitPrice         = MoneyFactory::create($request->unit_price_amount);
+        //query aritmatika
+        $fundapp->total             = MoneyFactory::create($request->unit_price_amount * $request->quantity);
+        $fundapp->status            = FundApplicationStatus::PENDING;
 
-        $user = User::findOrFail($request->user_id);
-        $fundapp->user()->associate($user);
+        $user = User::findOrFail($request->user_id); //$user dicari id nya untuk dimasukan ke user_id
+        $fundapp->user()->associate($user); //membuat relasi dengan fungsi user di traits untuk $user
+
 
         $fundapp->save();
         return $fundapp;
@@ -95,20 +97,27 @@ class FundApplicationController extends Controller
     {
         $fundapp = FundApplication::findOrFail($id);
 
-        $fundapp->application_date  = $request->application_date;
-        $fundapp->no_fund           = $request->no_fund;
-        $fundapp->about             = $request->about;
-        $fundapp->item_description  = $request->item_description;
-        $fundapp->unit_price        = $request->unit_price;
-        $fundapp->quantity          = $request->quantity;
-        $fundapp->total             = $request->total;
-        $fundapp->status            = $request->status;
+        $fundapp->application_date      = $request->application_date;
+        $fundapp->application_number    = $request->application_number;
+        $fundapp->about                 = $request->about;
+        $fundapp->item_description      = $request->item_description;
+        $fundapp->quantity              = $request->quantity;
+        $fundapp->status                = $request->status;
+
+        $user = User::findOrFail($request->user_id);
+        $fundapp->user()->associate($user);
+
+
+        $fundapp->application_date  = date_format(new DateTime($request->application_date), 'Y-m-d');
+        $fundapp->unitPrice         = MoneyFactory::create($request->unit_price_amount);
+        $fundapp->total             = MoneyFactory::create($request->unit_price_amount * $request->quantity);
 
         $user = User::findOrFail($request->user_id);
         $fundapp->user()->associate($user);
 
         $fundapp->save();
         return $fundapp;
+
     }
 
     /**
@@ -124,4 +133,24 @@ class FundApplicationController extends Controller
         $fundapp->delete();
         return $fundapp;
     }
+
+    public function reject($id) //approval belum
+    {
+        $this->middleware('role:')
+        $fundapp = FundApplication::findOrFail($id);
+        $fundapp->status = FundApplicationStatus::REJECTED;
+
+        $fundapp->save();
+        return $fundapp;
+    }
+
+    public function approve($id)
+    {
+        $fundapp = FundApplication::findOrFail($id);
+        $fundapp->status = FundApplicationStatus::APPROVED;
+
+        $fundapp->save();
+        return $fundapp;
+    }
+
 }
